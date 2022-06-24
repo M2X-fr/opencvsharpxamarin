@@ -91,7 +91,7 @@ namespace OpenCvSharp.Internal
             if (IsUnix())
             {
 #if DOTNETCORE
-                ExceptionHandler.RegisterExceptionCallback();
+                //ExceptionHandler.RegisterExceptionCallback();
 #endif
                 return;
             }
