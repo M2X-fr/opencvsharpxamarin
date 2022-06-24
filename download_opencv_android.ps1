@@ -1,7 +1,7 @@
 $tag = "4.6.0.20220608"
 $version = "460"
 $uriArray = @(
-    "https://github.com/m2x/opencvsharpxamarin/releases/download/${tag}/opencv_build_install.zip"
+    "https://github.com/M2X-fr/opencvsharpxamarin/releases/download/${tag}/opencv_build_install.zip"
 )
 
 function Download($uri, $outFile) {
@@ -12,7 +12,7 @@ function Download($uri, $outFile) {
 }
 
 New-Item opencv_build_install -Type directory -Force -ErrorAction Stop | Out-Null
-cd opencv_build_install
+
 
 [Net.ServicePointManager]::SecurityProtocol = @([Net.SecurityProtocolType]::Tls, [Net.SecurityProtocolType]::Tls11, [Net.SecurityProtocolType]::Tls12)
 
@@ -24,4 +24,4 @@ foreach ($uri in $uriArray) {
     Remove-Item -Path $outFile -ErrorAction Stop
 }
 
-cd ..
+
