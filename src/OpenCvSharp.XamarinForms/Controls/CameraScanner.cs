@@ -5,14 +5,30 @@ using Xamarin.Forms;
 
 namespace OpenCvSharp.XamarinForms.Controls
 {
+    public class ArucoData
+    {
+        public int Id { get; set; }
+        public int Angle { get; set; }
+    }
+
+
     public enum CameraScannerOptions
     {
         Rear,
         Front
     }
 
+    public class IdsFoundedEventArgs : EventArgs    
+    {
+        public ArucoData[] Data { get; set; }
+        public IdsFoundedEventArgs(ArucoData[] data) {
+            this.Data = data;
+        }
+    }
+
     public class CameraScanner : View
     {
+        public event EventHandler<IdsFoundedEventArgs>? IdsFounded;
         public event EventHandler? SnapshotRequested;
         public event EventHandler? SnapshotReady;
 
@@ -54,6 +70,13 @@ namespace OpenCvSharp.XamarinForms.Controls
             Snapshot = data;
             SnapshotReady?.Invoke(this, EventArgs.Empty);
         }
+
+        public void OnSnapshotReady(ArucoData[]data)
+        {
+            IdsFounded?.Invoke(this, new IdsFoundedEventArgs(data));
+        }
+        
+
         #endregion
 
         #region barcode

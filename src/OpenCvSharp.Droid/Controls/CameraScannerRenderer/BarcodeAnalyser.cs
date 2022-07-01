@@ -7,11 +7,14 @@ using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using AndroidX.Camera.Core;
+using AndroidX.Camera.Core.Internal.Utils;
 using OpenCvSharp.Aruco;
 using OpenCvSharp.Droid.Services;
+using OpenCvSharp.XamarinForms.Controls;
 using OpenCvSharp.XamarinForms.Services;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -21,19 +24,20 @@ using droid = Android;
 
 namespace OpenCvSharp.Droid.Controls.CameraScannerRenderer
 {
-
     public class ArucoAnalyzer : Java.Lang.Object, ImageAnalysis.IAnalyzer
     {
         private const string TAG = "OpenCvSharp.Droid";
         private readonly Action<Bitmap> overlayAction;
-        private readonly Func<string,string> qrCheckHandler;
-
+        private readonly Action<ArucoData[]> OnSnapshotReady;
         public float Zoom { get; set; }
+        private readonly Queue<QueueItem<ArucoData[]>> _workerQueue = new Queue<QueueItem<ArucoData[]>>();
 
-        public ArucoAnalyzer(Action<Bitmap> callback, Func<string, string> qrCheckHandler = null) //LumaListener listener)
+        private List<(ArucoData data, DateTime time)> tempArucoData = new List<(ArucoData, DateTime)>();
+
+        public ArucoAnalyzer(Action<Bitmap> callback, Action<ArucoData[]> onSnapshotReady = null) //LumaListener listener)
         {
             this.overlayAction = callback;
-            this.qrCheckHandler = qrCheckHandler;
+            this.OnSnapshotReady = onSnapshotReady;
         }
         public static Bitmap RotateBitmap(Bitmap source, float angle)
         {
@@ -46,170 +50,181 @@ namespace OpenCvSharp.Droid.Controls.CameraScannerRenderer
 
             try
             {
+                var data = ImageUtil.ImageToJpegByteArray(imageProxy);
+                var imageBitmap = BitmapFactory.DecodeByteArray(data, 0, data.Length);
+                imageBitmap = RotateBitmap(imageBitmap, 90);
 
-                var buffer = imageProxy.GetPlanes()[0].Buffer; // We get the luminance plane only, since we
-                                                          // want to binarize it and we don't wanna take color into consideration.
-                var bytes = new byte[buffer.Capacity()];
-                buffer.Get(bytes);
+                Mat rgba = new Mat();
+                LoadMatImage.BitmapToMat(imageBitmap, rgba);
 
-                var d = yuv420toNV21(imageProxy.Image);
-                var b = RotateBitmap(getBitmap(d, imageProxy), 90);
+                Mat rgb = new Mat();
+                rgb = rgba.CvtColor(ColorConversionCodes.RGBA2RGB);
 
-                using var imagetmp = new Mat();
+                Mat gray = new Mat();
+                using var outputImage = rgb;//.CvtColor(ColorConversionCodes.RGBA2GRAY);
 
-                LoadMatImage.BitmapToMat(b, imagetmp);
-                using var image = imagetmp.CvtColor(ColorConversionCodes.RGBA2GRAY);
-                using var outputImage = new Mat(new Size(image.Width, image.Height), MatType.CV_8UC4,new Scalar(0,0,0,0));// Mat.Zeros(new Size(image.Width, image.Height), MatType.CV_8UC4);// new Mat(new Size(image.Width,image.Height),MatType.CV_8UC4);
-                 //using var outputImage = image.CvtColor(ColorConversionCodes.GRAY2RGB);;
-                using var dict = CvAruco.GetPredefinedDictionary(PredefinedDictionaryName.Dict6X6_250);
+                using var dict = CvAruco.GetPredefinedDictionary(PredefinedDictionaryName.Dict4X4_100);
 
                 var param = DetectorParameters.Create();
-                CvAruco.DetectMarkers(image, dict, out var corners, out var ids, param, out var rejectedImgPoints);
+                param.MinCornerDistanceRate = 0.11;
 
-                var color = new Scalar(255, 255, 0, 255);
+                CvAruco.DetectMarkers(outputImage, dict, out var corners, out var ids, param, out var rejectedImgPoints);
 
-                // Draw markers custom
-                for (var i = 0; i < corners.Length; ++i)
+                if (corners.Length > 0)
                 {
+                    ArucoData[] t = new ArucoData[corners.Length];
+                    /// Pour chacun des points déterminer l'orientation
+                    /// 
 
-                    // Draw contour
-                    for (var j = 0; j < corners[i].Length; ++j)
+                    for (int i = 0; i < corners.Length; i++)
                     {
-                        var next = (j + 1) % corners[i].Length;
-                        outputImage.Line( corners[i][j].ToPoint(), corners[i][next].ToPoint(), color, 2);
-                            
+                        var item = corners[i];
+                        int orient = GetPointOrientation(item);
+                        t[i] = new ArucoData() { Id = ids[i], Angle = orient };
                     }
+
+                    QueuedBackgroundWorker.QueueWorkItem<ArucoData[], ArucoData[]>(
+                        _workerQueue,
+                        t,
+                        a =>
+                        {
+                            OnSnapshotReady(a.Argument);
+                            return a.Argument;
+                        },
+                        a =>
+                        {
+
+                        });
                 }
 
-                if(corners.Length > 0)
-                {
-                    outputImage.Rectangle(new Rect((int)corners[0][0].X - 3, (int)corners[0][0].Y - 3, 6, 6), new Scalar(255, 0, 0, 255), 2);
-                }
+                CvAruco.DrawDetectedMarkers(rgb, corners, ids, new Scalar(255, 0, 0));
 
-
-                //CvAruco.DrawDetectedMarkers(outputImage, corners, ids, new Scalar(255, 0, 0));
-
-                Bitmap bitmap = Bitmap.CreateBitmap(image.Width, image.Height, Config.Argb8888);
+                Bitmap bitmap = Bitmap.CreateBitmap(rgb.Width, rgb.Height, Config.Argb8888);
                 LoadMatImage.MatToBitmap(outputImage, bitmap);
 
-               /* AssetManager assets = Plugin.CurrentActivity.CrossCurrentActivity.Current.AppContext.Assets;// Xam.Forms.Forms.Context.Assets;
-                Bitmap bitmap = null;
-                using (Stream sr = assets.Open(DateTime.Now.Second % 10 > 5 ? "markers_6x6_250.png" : "aruco_markers_photo.jpg"))
-                {
-                    bitmap = BitmapFactory.DecodeStream(sr);
-                }*/
-
                 overlayAction?.Invoke(bitmap);
-                
             }
             catch (Exception ex)
             {
 
             }
 
-
             imageProxy.Close();
-
         }
 
-        private byte[] yuv420toNV21(droid.Media.Image image)
+        private int GetPointOrientation(Point2f[] item)
         {
-            var crop = image.CropRect;
-            var format = image.Format;
-            var width = crop.Width();
-            var height = crop.Height();
-            var planes = image.GetPlanes();
-            var data = new byte[(width * height * ImageFormat.GetBitsPerPixel(format) / 8)];
-            var rowData = new byte[planes[0].RowStride];
-            var channelOffset = 0;
-            var outputStride = 1;
+            int result = 0;
 
+            var dx = item[0].X - item[2].X;
+            var dy = item[0].Y - item[2].Y;
 
-
-            for (int i = 0; i < planes.Length; i++)
+            if (dx > 0)
             {
-                switch (i)
+                if (dy > 0)
                 {
-                    case 0:
-                        channelOffset = 0;
-                        outputStride = 1;
-                        break;
-                    case 1:
-                        channelOffset = width * height + 1;
-                        outputStride = 2;
-                        break;
-                    case 2:
-                        channelOffset = width * height;
-                        outputStride = 2;
-                        break;
-                    default:
-                        break;
+                    return 180;
                 }
-                var buffer = planes[i].Buffer;
-                var rowStride = planes[i].RowStride;
-                var pixelStride = planes[i].PixelStride;
-                var shift = i == 0 ? 0 : 1;
-                var w = width >> shift;
-                var h = height >> shift;
-                buffer.Position(rowStride * (crop.Top >> shift) + pixelStride * (crop.Left >> shift));
-
-                for (int row = 0; row < h; row++)
+                else if (dy < 0)
                 {
-                    int length;
-                    if (pixelStride == 1 && outputStride == 1)
-                    {
-                        length = w;
-                        buffer.Get(data, channelOffset, length);
-                        channelOffset += length;
-                    }
-                    else
-                    {
-                        length = (w - 1) * pixelStride + 1;
-                        buffer.Get(rowData, 0, length);
-                        for (int col = 0; col < w; col++)
-                        {
-                            data[channelOffset] = rowData[col * pixelStride];
-                            channelOffset += outputStride;
-                        }
-                    }
-                    if (row < h - 1)
-                    {
-                        buffer.Position(buffer.Position() + rowStride - length);
-                    }
+                    return 270;
                 }
             }
-            return data;
+            else if (dx < 0)
+            {
+                if (dy > 0)
+                {
+                    return 90;
+                }
+                else if (dy < 0)
+                {
+                    return 0;
+                }
+            }
+            {
+
+            }
+
+            return result;
         }
+    }
 
-
-        private Bitmap getBitmap(byte[] data, IImageProxy metadata)
+    public static class QueuedBackgroundWorker
+    {
+        public static void QueueWorkItem<Tin, Tout>(
+            Queue<QueueItem<Tin>> queue,
+            Tin inputArgument,
+            Func<DoWorkArgument<Tin>, Tout> doWork,
+            Action<WorkerResult<Tout>> workerCompleted)
         {
+            if (queue == null) throw new ArgumentNullException("queue");
 
-            var image = new YuvImage(data, ImageFormatType.Nv21, metadata.Width, metadata.Height, null);
-            var stream = new System.IO.MemoryStream();
-            image.CompressToJpeg(
-                new droid.Graphics.Rect(0, 0, metadata.Width, metadata.Height),
-                100,
-                stream
-            );
-            var bmp = BitmapFactory.DecodeByteArray(stream.ToArray(), 0, (int)stream.Length);
-            stream.Close();
-            return bmp;
+            BackgroundWorker bw = new BackgroundWorker();
+            bw.WorkerReportsProgress = false;
+            bw.WorkerSupportsCancellation = false;
+            bw.DoWork += (sender, args) =>
+            {
+                if (doWork != null)
+                {
+                    args.Result = doWork(new DoWorkArgument<Tin>((Tin)args.Argument));
+                }
+            };
+            bw.RunWorkerCompleted += (sender, args) =>
+            {
+                if (workerCompleted != null)
+                {
+                    workerCompleted(new WorkerResult<Tout>((Tout)args.Result, args.Error));
+                }
+                queue.Dequeue();
+                if (queue.Count > 0)
+                {
+                    QueueItem<Tin> nextItem = queue.Peek(); // as QueueItem<T>;
+                    nextItem.BackgroundWorker.RunWorkerAsync(nextItem.Argument);
+                }
+            };
+
+            queue.Enqueue(new QueueItem<Tin>(bw, inputArgument));
+            if (queue.Count == 1)
+            {
+                QueueItem<Tin> nextItem = queue.Peek() as QueueItem<Tin>;
+                nextItem.BackgroundWorker.RunWorkerAsync(nextItem.Argument);
+            }
         }
+    }
 
-        private byte[] getBitmapData(byte[] data, IImageProxy metadata)
+    public class DoWorkArgument<T>
+    {
+        public DoWorkArgument(T argument)
         {
-
-            var image = new YuvImage(data, ImageFormatType.Nv21, metadata.Width, metadata.Height, null);
-            var stream = new System.IO.MemoryStream();
-            image.CompressToJpeg(
-                new droid.Graphics.Rect(0, 0, metadata.Width, metadata.Height),
-                100,
-                stream
-            );
-            var datar = stream.ToArray();
-            stream.Close();
-            return datar;
+            this.Argument = argument;
         }
+
+        public T Argument { get; private set; }
+    }
+
+    public class WorkerResult<T>
+    {
+        public WorkerResult(T result, Exception error)
+        {
+            this.Result = result;
+            this.Error = error;
+        }
+
+        public T Result { get; private set; }
+
+        public Exception Error { get; private set; }
+    }
+
+    public class QueueItem<T>
+    {
+        public QueueItem(BackgroundWorker backgroundWorker, T argument)
+        {
+            this.BackgroundWorker = backgroundWorker;
+            this.Argument = argument;
+        }
+
+        public T Argument { get; private set; }
+
+        public BackgroundWorker BackgroundWorker { get; private set; }
     }
 }

@@ -1,12 +1,15 @@
 ﻿using OpenCvSharp.Aruco;
 using OpenCvSharp.Tests.Xamarin.Forms.Services;
+using OpenCvSharp.XamarinForms.Controls;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using Xamarin.Essentials;
 using Xamarin.Forms;
 
@@ -14,106 +17,135 @@ namespace OpenCvSharp.Tests.Xamarin.Forms
 {
     public partial class MainPage : ContentPage
     {
+        public MainVM datas = new MainVM();
+
         public MainPage()
         {
             InitializeComponent();
 
-            RunTest();
-            //DrawDetectedMarker();
+            BindingContext = datas;
         }
 
-        public void DrawDetectedMarker()
+        public void MarkerDataNotification(object sender, IdsFoundedEventArgs e)
         {
-           /* using var imagetmp = DependencyService.Get<ILoadMatImage>().LoadMatFromResource("markers_6x6_250.png");// Image("markers_6x6_250.png", ImreadModes.Grayscale);
-            using var image = imagetmp.CvtColor(ColorConversionCodes.RGBA2GRAY);
-            using var outputImage = image.CvtColor(ColorConversionCodes.GRAY2RGB);
-            using var dict = CvAruco.GetPredefinedDictionary(PredefinedDictionaryName.Dict6X6_250);
-            var param = DetectorParameters.Create();
-            CvAruco.DetectMarkers(image, dict, out var corners, out var ids, param, out var rejectedImgPoints);
+            this.Dispatcher.BeginInvokeOnMainThread(() =>
+            {
+                foreach (var item in e.Data)
+                {
+                    if (!datas.datasTemp.Any(Id => Id.Id == item.Id))
+                        datas.datasTemp.Add(new ItemData(item.Id, item.Angle, DateTime.Now));
+                    else
+                    {
+                        var t = datas.datasTemp.FirstOrDefault(i => i.Id == item.Id);
+                        t.Date = DateTime.Now;
+                        t.Angle = item.Angle;
+                    }
+                }
 
-            CvAruco.DrawDetectedMarkers(outputImage, corners, ids, new Scalar(255, 0, 0));
-            CvAruco.DrawDetectedMarkers(outputImage, rejectedImgPoints, null, new Scalar(0, 0, 255));
+                datas.datasTemp = datas.datasTemp.Where(d=>(DateTime.Now - d.Date).TotalMilliseconds < 5 ).ToList();
 
-
-            original.Source = DependencyService.Get<ILoadMatImage>().LoadImageFromResource("markers_6x6_250.png");
-            testImage.Source = DependencyService.Get<ILoadMatImage>().GetImageSourceFromMat(image, image.Width, image.Height);
-            testImage2.Source = DependencyService.Get<ILoadMatImage>().GetImageSourceFromMat(outputImage, outputImage.Width, outputImage.Height);*/
+                foreach (var item in datas.datasTemp)
+                {
+                    if (!datas.Datas.Any(Id => Id.Id == item.Id))
+                        datas.Datas.Add(new ItemData(item.Id, item.Angle, DateTime.Now));
+                    else
+                    {
+                        var t = datas.Datas.FirstOrDefault(i => i.Id == item.Id);
+                        t.Date = DateTime.Now;
+                        t.Angle = item.Angle;
+                    }
+                }
+                OnPropertyChanged(nameof(datas.Datas));
+            });
         }
 
-        public void RunTest()
-        {/*
-            // The locations of the markers in the image at FilePath.Image.Aruco.
-            const int upperLeftMarkerId = 160;
-            const int upperRightMarkerId = 268;
-            const int lowerRightMarkerId = 176;
-            const int lowerLeftMarkerId = 168;
+        
+    }
 
-            //using var src = DependencyService.Get<ILoadMatImage>().LoadMatFromResource("aruco_markers_photo.jpg");
+    public class MainVM : BindableObject
+    {
+        public List<ItemData> datasTemp = new List<ItemData>();
+        public ObservableCollection<ItemData> datas = new ObservableCollection<ItemData>();
+        public CameraScannerOptions CurrentCamera { get; set; } = CameraScannerOptions.Rear;
+        public ICommand ChangeCameraCommand { get; set; }
 
-            using var imagetmp = DependencyService.Get<ILoadMatImage>().LoadMatFromResource("aruco_markers_photo.jpg");// Image("markers_6x6_250.png", ImreadModes.Grayscale);
-            using var src = imagetmp.CvtColor(ColorConversionCodes.RGB2GRAY);
+        public ICommand ClearCommand { get; set; }
 
+        public ObservableCollection<ItemData> Datas
+        {
+            get => datas;
+            set => datas = value;
+        }
 
-            original.Source = DependencyService.Get<ILoadMatImage>().LoadImageFromResource("aruco_markers_photo.jpg");
-            testImage.Source = DependencyService.Get<ILoadMatImage>().GetImageSourceFromMat(src, src.Width, src.Height);
-
-            var detectorParameters = DetectorParameters.Create();
-            detectorParameters.CornerRefinementMethod = CornerRefineMethod.Subpix;
-            detectorParameters.CornerRefinementWinSize = 9;
-
-            using var dictionary = CvAruco.GetPredefinedDictionary(PredefinedDictionaryName.Dict4X4_1000);
-
-            CvAruco.DetectMarkers(src, dictionary, out var corners, out var ids, detectorParameters, out var rejectedPoints);
-
-            using var detectedMarkers = src.CvtColor(ColorConversionCodes.GRAY2RGB);
-            CvAruco.DrawDetectedMarkers(detectedMarkers, corners, ids, Scalar.Crimson);
-
-            // Find the index of the four markers in the ids array. We'll use this same index into the
-            // corners array to find the corners of each marker.
-            var upperLeftCornerIndex = Array.FindIndex(ids, id => id == upperLeftMarkerId);
-            var upperRightCornerIndex = Array.FindIndex(ids, id => id == upperRightMarkerId);
-            var lowerRightCornerIndex = Array.FindIndex(ids, id => id == lowerRightMarkerId);
-            var lowerLeftCornerIndex = Array.FindIndex(ids, id => id == lowerLeftMarkerId);
-
-            // Make sure we found all four markers.
-            if (upperLeftCornerIndex < 0 || upperRightCornerIndex < 0
-                 || lowerRightCornerIndex < 0 || lowerLeftCornerIndex < 0)
+        public MainVM()
+        {
+            ClearCommand = new Command(() =>
             {
-                return;
+                this.datasTemp.Clear();
+                this.datas.Clear();
+
+                OnPropertyChanged(nameof(Datas));
+
+            });
+
+            ChangeCameraCommand = new Command(() =>
+            {
+                if (CurrentCamera == CameraScannerOptions.Rear)
+                {
+                    CurrentCamera = CameraScannerOptions.Front;
+                }
+                else
+                    CurrentCamera = CameraScannerOptions.Rear;
+            });
+        }
+    }
+
+    public class ItemData : INotifyPropertyChanged
+    {
+
+        public ItemData(int id, int angle, DateTime date)
+        {
+            Id = id;
+            Angle = angle;
+            Date = date;
+        }
+        private int id;
+
+        public int Id
+        {
+            get { return id; }
+            set { id = value;
+                OnPropertyChanged(nameof(Id));
             }
-
-            // Marker corners are stored clockwise beginning with the upper-left corner.
-            // Get the first (upper-left) corner of the upper-left marker.
-            var upperLeftPixel = corners[upperLeftCornerIndex][0];
-            // Get the second (upper-right) corner of the upper-right marker.
-            var upperRightPixel = corners[upperRightCornerIndex][1];
-            // Get the third (lower-right) corner of the lower-right marker.
-            var lowerRightPixel = corners[lowerRightCornerIndex][2];
-            // Get the fourth (lower-left) corner of the lower-left marker.
-            var lowerLeftPixel = corners[lowerLeftCornerIndex][3];
-
-            // Create coordinates for passing to GetPerspectiveTransform
-            var sourceCoordinates = new List<Point2f>
-            {
-                upperLeftPixel, upperRightPixel, lowerRightPixel, lowerLeftPixel
-            };
-            var destinationCoordinates = new List<Point2f>
-            {
-                new Point2f(0, 0),
-                new Point2f(1024, 0),
-                new Point2f(1024, 1024),
-                new Point2f(0, 1024),
-            };
-
-            using var transform = Cv2.GetPerspectiveTransform(sourceCoordinates, destinationCoordinates);
-            using var normalizedImage = new Mat();
-            Cv2.WarpPerspective(src, normalizedImage, transform, new OpenCvSharp.Size(1024, 1024));
-
-            testImage2.Source = DependencyService.Get<ILoadMatImage>().GetImageSourceFromMat(detectedMarkers, detectedMarkers.Width, detectedMarkers.Height);
-            testImage3.Source = DependencyService.Get<ILoadMatImage>().GetImageSourceFromMat(normalizedImage, normalizedImage.Width, normalizedImage.Height);
-
-
-            Cv2.WaitKey();*/
         }
+
+
+        private int angle;
+
+        public int Angle
+        {
+            get { return angle; }
+            set { angle = value;
+                OnPropertyChanged(nameof(Angle));
+            }
+        }
+
+        private DateTime date;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void OnPropertyChanged(string name) {
+            if (PropertyChanged!=null)
+                PropertyChanged(this, new PropertyChangedEventArgs(name));
+        }
+        public DateTime Date
+        {
+            get { return date; }
+            set { date = value;
+                OnPropertyChanged(nameof(Date));
+            }
+        }
+
+
     }
 }

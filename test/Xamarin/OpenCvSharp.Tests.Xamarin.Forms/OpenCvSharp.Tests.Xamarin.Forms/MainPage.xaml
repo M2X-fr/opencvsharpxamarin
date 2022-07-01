@@ -1,9 +1,35 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:controls="clr-namespace:OpenCvSharp.XamarinForms.Controls;assembly=OpenCvSharp.XamarinForms"
-             x:Class="OpenCvSharp.Tests.Xamarin.Forms.MainPage">
+             xmlns:controls="clr-namespace:OpenCvSharp.XamarinForms.Controls;assembly=OpenCvSharp.XamarinForms" 
+             
+             x:Class="OpenCvSharp.Tests.Xamarin.Forms.MainPage" >
 
-    <controls:CameraScanner VerticalOptions="Fill" HorizontalOptions="Fill" ></controls:CameraScanner>
+    <Grid VerticalOptions="Fill" HorizontalOptions="Fill" >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="300"></RowDefinition>
+            <RowDefinition Height="50"></RowDefinition>
+        </Grid.RowDefinitions>
 
+        <controls:CameraScanner  IdsFounded="MarkerDataNotification" Grid.Row="0" ></controls:CameraScanner>
+        <ListView ItemsSource="{Binding Datas}" IsVisible="True"
+                  Grid.Row="1" VerticalOptions="Fill" HorizontalOptions="Fill">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <ViewCell>
+                        <StackLayout  Orientation="Horizontal" >
+                            <Label Text="{Binding Id}" />
+                            <Label Text=" / " />
+                            <Label Text="{Binding Angle}" />
+                        </StackLayout>
+                    </ViewCell>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <StackLayout Grid.Row="2"  Orientation="Horizontal">
+            <Button Text="Sel. Cam." ></Button>
+            <Button Text="Clear" Command="{Binding ClearCommand}" ></Button>
+        </StackLayout>
+    </Grid>
 </ContentPage>

@@ -15,7 +15,7 @@ using System.Text;
 using Xamarin.Forms;
 using static Android.Graphics.Bitmap;
 using Xam = Xamarin; 
-
+/*
 [assembly: Xamarin.Forms.Dependency(typeof(OpenCvSharp.Tests.Xamarin.Forms.Droid.Services.LoadMatImage))]
 namespace OpenCvSharp.Tests.Xamarin.Forms.Droid.Services
 {
@@ -71,3 +71,4 @@ namespace OpenCvSharp.Tests.Xamarin.Forms.Droid.Services
 
     }
 }
+*/
