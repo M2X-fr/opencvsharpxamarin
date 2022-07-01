@@ -225,7 +225,7 @@ namespace OpenCvSharp.Droid.Controls.CameraScannerRenderer
                 }
                 catch (Exception exc)
                 {
-
+                    Android.Util.Log.Debug("OpenCvSharpXamarin", exc.Message + " - " + exc.StackTrace);
                 }
 
             }), ContextCompat.GetMainExecutor(CrossCurrentActivity.Current.Activity)); //GetMainExecutor: returns an Executor that runs on the main thread.
@@ -236,10 +236,17 @@ namespace OpenCvSharp.Droid.Controls.CameraScannerRenderer
 
             Device.BeginInvokeOnMainThread(() =>
             {
-                if(viewFinder.Display != null)
+                try
                 {
-                    var test = viewFinder.Display.Rotation;
-                    overlay.SetImageBitmap(image);
+                    if (viewFinder.Display != null)
+                    {
+                        var test = viewFinder.Display.Rotation;
+                        overlay.SetImageBitmap(image);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Android.Util.Log.Debug("OpenCvSharpXamarin", ex.Message + " - " + ex.StackTrace);
                 }
 
             });
@@ -278,30 +285,38 @@ namespace OpenCvSharp.Droid.Controls.CameraScannerRenderer
 
         protected override void Dispose(bool disposing)
         {
-            if (cameraProvider != null)
-                cameraProvider.UnbindAll();
-
-            if (cameraExecutor != null)
-                cameraExecutor.Shutdown();
-
-            if (_camOrientation != null)
-                _camOrientation.Disable();
-
-            if (_element != null)
-                _element.SnapshotRequested -= _element_SnapshotRequested;
-
-            if (_listener != null)
+            try
             {
-                _listener.OrientationChanged -= OnOrientationChanged;
-                _listener.Dispose();
-            }
+                if (cameraProvider != null)
+                    cameraProvider.UnbindAll();
 
-            if (_sensorManager != null)
+                if (cameraExecutor != null)
+                    cameraExecutor.Shutdown();
+
+                if (_camOrientation != null)
+                    _camOrientation.Disable();
+
+                if (_element != null)
+                    _element.SnapshotRequested -= _element_SnapshotRequested;
+
+                if (_sensorManager != null)
+                {
+                    _sensorManager.UnregisterListener(_listener);
+                }
+
+                if (_listener != null)
+                {
+                    _listener.OrientationChanged -= OnOrientationChanged;
+                    _listener.Dispose();
+                }
+
+               
+
+            }
+            catch (Exception ex)
             {
-                _sensorManager.UnregisterListener(_listener);
-                _sensorManager.Dispose();
+                Android.Util.Log.Debug("OpenCvSharpXamarin", ex.Message + " - " + ex.StackTrace);
             }
-
             base.Dispose(disposing);
         }
 
@@ -431,27 +446,34 @@ namespace OpenCvSharp.Droid.Controls.CameraScannerRenderer
 
         public override void OnOrientationChanged(int orientation)
         {
-            // Monitors orientation values to determine the target rotation value
-            int rotation = 0;
+            try
+            {
+                // Monitors orientation values to determine the target rotation value
+                int rotation = 0;
 
-            if (orientation >= 45 && orientation < 135)
-            {
-                rotation = (int)SurfaceOrientation.Rotation270;
-            }
-            else if (orientation >= 135 && orientation < 225)
-            {
-                rotation = (int)SurfaceOrientation.Rotation180;
-            }
-            else if (orientation >= 225 && orientation < 315)
-            {
-                rotation = (int)SurfaceOrientation.Rotation90;
-            }
-            else
-            {
-                rotation = (int)SurfaceOrientation.Rotation0;
-            }
+                if (orientation >= 45 && orientation < 135)
+                {
+                    rotation = (int)SurfaceOrientation.Rotation270;
+                }
+                else if (orientation >= 135 && orientation < 225)
+                {
+                    rotation = (int)SurfaceOrientation.Rotation180;
+                }
+                else if (orientation >= 225 && orientation < 315)
+                {
+                    rotation = (int)SurfaceOrientation.Rotation90;
+                }
+                else
+                {
+                    rotation = (int)SurfaceOrientation.Rotation0;
+                }
 
-            _imageCapture.TargetRotation = rotation;
+                _imageCapture.TargetRotation = rotation;
+            }
+            catch (Exception ex)
+            {
+                Android.Util.Log.Debug("OpenCvSharpXamarin", ex.Message + " - " + ex.StackTrace);
+            }
         }
     }
 

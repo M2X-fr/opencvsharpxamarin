@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>OpenCvSharp4.Xamarin</id>
-        <version>4.3.0.20190901-alpha04</version>
+        <version>4.3.0.20190901-alpha01</version>
         <title>OpenCvSharp core library fo Xamarin Forms</title>
         <authors>M2X</authors>
         <license type="expression">Apache-2.0</license>

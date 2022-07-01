@@ -59,7 +59,17 @@ namespace OpenCvSharp.Tests.Xamarin.Forms
             });
         }
 
-        
+        private void Button_Clicked(object sender, EventArgs e)
+        {
+            if(root.Children.Count == 0)
+            {
+                root.Children.Add(new OpenCvSharp.XamarinForms.Controls.CameraScanner());
+            }
+            else
+            {
+                root.Children.Clear();
+            }
+        }
     }
 
     public class MainVM : BindableObject

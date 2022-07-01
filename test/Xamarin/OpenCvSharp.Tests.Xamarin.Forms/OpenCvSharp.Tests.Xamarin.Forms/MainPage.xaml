@@ -12,7 +12,9 @@
             <RowDefinition Height="50"></RowDefinition>
         </Grid.RowDefinitions>
 
-        <controls:CameraScanner  IdsFounded="MarkerDataNotification" Grid.Row="0" ></controls:CameraScanner>
+        <Grid x:Name="root" Grid.Row="0">
+            <controls:CameraScanner  IdsFounded="MarkerDataNotification" Grid.Row="0" ></controls:CameraScanner>
+        </Grid>
         <ListView ItemsSource="{Binding Datas}" IsVisible="True"
                   Grid.Row="1" VerticalOptions="Fill" HorizontalOptions="Fill">
             <ListView.ItemTemplate>
@@ -28,7 +30,7 @@
             </ListView.ItemTemplate>
         </ListView>
         <StackLayout Grid.Row="2"  Orientation="Horizontal">
-            <Button Text="Sel. Cam." ></Button>
+            <Button Text="Sel. Cam." Clicked="Button_Clicked" ></Button>
             <Button Text="Clear" Command="{Binding ClearCommand}" ></Button>
         </StackLayout>
     </Grid>
