@@ -54,18 +54,18 @@
     <Compile Include="Services\LoadMatImage.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedNativeLibrary Include="lib\arm64-v8a\libOpenCvSharpExtern.so">
+    <None Include="lib\arm64-v8a\libOpenCvSharpExtern.so">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="lib\armeabi-v7a\libOpenCvSharpExtern.so">
+    </None>
+    <None Include="lib\armeabi-v7a\libOpenCvSharpExtern.so">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="lib\x86\libOpenCvSharpExtern.so">
+    </None>
+    <None Include="lib\x86\libOpenCvSharpExtern.so">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedNativeLibrary>
-    <EmbeddedNativeLibrary Include="lib\x86_64\libOpenCvSharpExtern.so">
+    </None>
+    <None Include="lib\x86_64\libOpenCvSharpExtern.so">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </EmbeddedNativeLibrary>
+    </None>
     <None Include="Resources\AboutResources.txt" />
   </ItemGroup>
   <ItemGroup>

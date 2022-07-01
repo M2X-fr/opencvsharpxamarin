@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+    <metadata>
+        <id>OpenCvSharp4.Xamarin</id>
+        <version>4.3.0.20190901-alpha04</version>
+        <title>OpenCvSharp core library fo Xamarin Forms</title>
+        <authors>M2X</authors>
+        <license type="expression">Apache-2.0</license>
+        <projectUrl>https://github.com/M2X-fr/opencvsharpxamarin</projectUrl>
+        <iconUrl>https://raw.githubusercontent.com/m2x-fr/opencvsharpxamarin/master/nuget/icon/opencvsharp.png</iconUrl>
+        <requireLicenseAcceptance>false</requireLicenseAcceptance>
+        <description>OpenCV wrapper for Xamarin Forms Android.</description>
+        <summary>OpenCV wrapper for Xamarin Forms Android.</summary>
+        <releaseNotes></releaseNotes>
+        <copyright>Copyright 2008-2022</copyright>
+        <tags>Image Processing OpenCV Wrapper FFI opencvsharp;Xamarin;Android</tags>
+        <repository type="git" url="https://github.com/M2X-fr/opencvsharpxamarin.git" />
+        <dependencies>
+            <group targetFramework="netstandard2.0">
+                <dependency id="System.Runtime.CompilerServices.Unsafe" version="6.0.0" />
+                <dependency id="System.Memory" version="4.5.4" />
+				<dependency id="Xamarin.Forms" version="5.0.0.2291" />
+            </group>
+			<group targetFramework="MonoAndroid11.0">
+                <dependency id="Plugin.CurrentActivity" version="2.1.0.4" />
+                <dependency id="Xamarin.AndroidX.AppCompat" version="1.3.1.3" />
+                <dependency id="Xamarin.AndroidX.Camera.Camera2" version="1.0.2" />
+                <dependency id="Xamarin.AndroidX.Camera.View" version="1.0.0.5-alpha20" />
+                <dependency id="Xamarin.AndroidX.Camera.Lifecycle" version="1.0.2" />
+                <dependency id="Xamarin.AndroidX.ConstraintLayout" version="2.1.1.2" />
+				<dependency id="Xamarin.Forms" version="5.0.0.2291" />
+            </group>
+        </dependencies>
+		<contentFiles>
+			<files include="**" buildAction="None" copyToOutput="true" flatten="false" />
+		</contentFiles>
+    </metadata>
+    <files>
+
+		<file src="..\src\OpenCvSharp\bin\Release\netstandard2.0\OpenCvSharp.dll" target="lib\netstandard2.0" />
+		<file src="..\src\OpenCvSharp\bin\Release\netstandard2.0\OpenCvSharp.pdb" target="lib\netstandard2.0" />
+		<file src="..\src\OpenCvSharp\bin\Release\netstandard2.0\OpenCvSharp.xml" target="lib\netstandard2.0" />
+		
+		<file src="..\src\OpenCvSharp.XamarinForms\bin\Release\netstandard2.0\OpenCvSharp.XamarinForms.dll" target="lib\netstandard2.0" />
+		<file src="..\src\OpenCvSharp.XamarinForms\bin\Release\netstandard2.0\OpenCvSharp.XamarinForms.pdb" target="lib\netstandard2.0" />
+		
+		<!--Xamarin.Android-->
+		<file src="..\src\OpenCvSharp\bin\Release\netstandard2.0\OpenCvSharp.dll" target="lib\MonoAndroid11.0" />
+		<file src="..\src\OpenCvSharp\bin\Release\netstandard2.0\OpenCvSharp.pdb" target="lib\MonoAndroid11.0" />
+		<file src="..\src\OpenCvSharp\bin\Release\netstandard2.0\OpenCvSharp.xml" target="lib\MonoAndroid11.0" />
+		<file src="..\src\OpenCvSharp.XamarinForms\bin\Release\netstandard2.0\OpenCvSharp.XamarinForms.dll" target="lib\MonoAndroid11.0" />
+		<file src="..\src\OpenCvSharp.XamarinForms\bin\Release\netstandard2.0\OpenCvSharp.XamarinForms.pdb" target="lib\MonoAndroid11.0" />
+		<file src="..\src\OpenCvSharp.Droid\bin\Release\OpenCvSharp.Droid.dll" target="lib\MonoAndroid11.0" />
+		<file src="..\src\OpenCvSharp.Droid\bin\Release\OpenCvSharp.Droid.pdb" target="lib\MonoAndroid11.0" />
+		<file src="OpenCvSharp4.Xamarin.props" target="build\OpenCvSharp4.Xamarin.props"/>
+        <file src="..\src\OpenCvSharp.Droid\lib\armeabi-v7a\libOpenCvSharpExtern.so" target="build/android-armv7/libOpenCvSharpExtern.so" />
+        <file src="..\src\OpenCvSharp.Droid\lib\arm64-v8a\libOpenCvSharpExtern.so" target="build/android-armv8/libOpenCvSharpExtern.so" />
+        <file src="..\src\OpenCvSharp.Droid\lib\x86\libOpenCvSharpExtern.so" target="build/android-x86/libOpenCvSharpExtern.so" />
+        <file src="..\src\OpenCvSharp.Droid\lib\x86_64\libOpenCvSharpExtern.so" target="build/android-x86_64/libOpenCvSharpExtern.so" />
+
+    </files>
+</package>
