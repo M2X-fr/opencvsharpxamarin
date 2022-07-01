@@ -27,7 +27,7 @@ namespace OpenCvSharp.Tests.Xamarin.Forms.Droid
 
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
         }
-
+        /*
         // Method adapted from the original OpenCV convert at https://github.com/opencv/opencv/blob/b39cd06249213220e802bb64260727711d9fc98c/modules/java/generator/src/cpp/utils.cpp
         ///<summary>
         ///This function converts an image in the OpenCV Mat representation to the Android Bitmap.
@@ -141,7 +141,7 @@ namespace OpenCvSharp.Tests.Xamarin.Forms.Droid
 
             srcImage.UnlockPixels();
             return;
-        }
+        }*/
     }
 
     

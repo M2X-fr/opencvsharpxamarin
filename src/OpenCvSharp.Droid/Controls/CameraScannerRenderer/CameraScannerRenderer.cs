@@ -111,12 +111,12 @@ namespace OpenCvSharp.Droid.Controls.CameraScannerRenderer
                 else
                     _layout = (this.Context as Activity).LayoutInflater.Inflate(Resource.Layout.cameraScanner, this, false) as ConstraintLayout;
 
-               /* _sensorManager = CrossCurrentActivity.Current.Activity.GetSystemService(Context.SensorService) as SensorManager;
+                _sensorManager = CrossCurrentActivity.Current.Activity.GetSystemService(Context.SensorService) as SensorManager;
 
                 var sensor = _sensorManager.GetDefaultSensor(SensorType.Orientation);
                 _listener = new MyOrientationListner();
                 _listener.OrientationChanged += OnOrientationChanged;
-                _sensorManager.RegisterListener(_listener, sensor, SensorDelay.Normal);*/
+                _sensorManager.RegisterListener(_listener, sensor, SensorDelay.Normal);
 
 
                 viewFinder = _layout.GetChildAt(0) as PreviewView;
@@ -141,11 +141,11 @@ namespace OpenCvSharp.Droid.Controls.CameraScannerRenderer
 
         private void OnOrientationChanged(object sender, EventArgs e)
         {
-            var test = (viewFinder.LayoutParameters as ConstraintLayout.LayoutParams).DimensionRatio;
-            if (_layout.Display != null && _layout.Display.Rotation == SurfaceOrientation.Rotation0 )
-                (viewFinder.LayoutParameters as ConstraintLayout.LayoutParams).DimensionRatio = "3:4";
-            else
-                (viewFinder.LayoutParameters as ConstraintLayout.LayoutParams).DimensionRatio = "4:3";
+            //var test = (viewFinder.LayoutParameters as ConstraintLayout.LayoutParams).DimensionRatio;
+            //if (_layout.Display != null && _layout.Display.Rotation == SurfaceOrientation.Rotation0 )
+            //    (viewFinder.LayoutParameters as ConstraintLayout.LayoutParams).DimensionRatio = "3:4";
+            //else
+            //    (viewFinder.LayoutParameters as ConstraintLayout.LayoutParams).DimensionRatio = "4:3";
         }
 
         private void _element_SnapshotRequested(object sender, EventArgs e)
@@ -190,7 +190,7 @@ namespace OpenCvSharp.Droid.Controls.CameraScannerRenderer
                     {
                         DrawFocusRect(image);
 
-                    }, _element.QrCheckHandler);
+                    }, _element.OnSnapshotReady);
 
                 }
                 var imageAnalyzerBarcode = new ImageAnalysis.Builder()
